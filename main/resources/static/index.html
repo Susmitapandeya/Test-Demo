@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App - API Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .response.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .response.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .todo-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .todo-item.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+
+        .todo-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status.authenticated {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.unauthenticated {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Todo App API</h1>
+            <p>Spring Boot REST API with JWT Authentication</p>
+        </div>
+
+        <div class="content">
+            <!-- Authentication Status -->
+            <div class="section">
+                <h2>🔐 Authentication Status</h2>
+                <div id="authStatus" class="status unauthenticated">Not Authenticated</div>
+                <div id="tokenInfo" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
+            </div>
+
+            <!-- Authentication Section -->
+            <div class="section">
+                <h2>🔑 Authentication</h2>
+                <div class="grid">
+                    <div>
+                        <h3>Register User</h3>
+                        <div class="form-group">
+                            <label for="regUsername">Username:</label>
+                            <input type="text" id="regUsername" placeholder="Enter username">
+                        </div>
+                        <div class="form-group">
+                            <label for="regPassword">Password:</label>
+                            <input type="password" id="regPassword" placeholder="Enter password">
+                        </div>
+                        <button onclick="registerUser()">Register</button>
+                        <div id="registerResponse" class="response"></div>
+                    </div>
+
+                    <div>
+                        <h3>Login User</h3>
+                        <div class="form-group">
+                            <label for="loginUsername">Username:</label>
+                            <input type="text" id="loginUsername" placeholder="Enter username">
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Password:</label>
+                            <input type="password" id="loginPassword" placeholder="Enter password">
+                        </div>
+                        <button onclick="loginUser()">Login</button>
+                        <div id="loginResponse" class="response"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Todo Management -->
+            <div class="section">
+                <h2>📋 Todo Management</h2>
+                <div class="grid">
+                    <div>
+                        <h3>Create Todo</h3>
+                        <div class="form-group">
+                            <label for="todoTitle">Title:</label>
+                            <input type="text" id="todoTitle" placeholder="Enter todo title">
+                        </div>
+                        <div class="form-group">
+                            <label for="todoDescription">Description:</label>
+                            <textarea id="todoDescription" rows="3" placeholder="Enter todo description"></textarea>
+                        </div>
+                        <button onclick="createTodo()">Create Todo</button>
+                        <div id="createResponse" class="response"></div>
+                    </div>
+
+                    <div>
+                        <h3>Get All Todos</h3>
+                        <button onclick="getAllTodos()">Fetch Todos</button>
+                        <div id="todosList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Information -->
+            <div class="section">
+                <h2>📚 API Endpoints</h2>
+                <div style="font-family: 'Courier New', monospace; font-size: 13px;">
+                    <p><strong>Authentication:</strong></p>
+                    <p>POST /api/auth/register - Register new user</p>
+                    <p>POST /api/auth/login - Login and get JWT token</p>
+                    
+                    <p><strong>Todos (Require Authentication):</strong></p>
+                    <p>GET /api/todos - Get all todos</p>
+                    <p>GET /api/todos/{id} - Get specific todo</p>
+                    <p>POST /api/todos - Create new todo</p>
+                    <p>PUT /api/todos/{id} - Update todo</p>
+                    <p>DELETE /api/todos/{id} - Delete todo</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('authToken');
+        let currentUser = localStorage.getItem('currentUser');
+
+        // Update authentication status
+        function updateAuthStatus() {
+            const authStatus = document.getElementById('authStatus');
+            const tokenInfo = document.getElementById('tokenInfo');
+            
+            if (authToken) {
+                authStatus.textContent = 'Authenticated';
+                authStatus.className = 'status authenticated';
+                tokenInfo.textContent = `User: ${currentUser} | Token: ${authToken.substring(0, 20)}...`;
+            } else {
+                authStatus.textContent = 'Not Authenticated';
+                authStatus.className = 'status unauthenticated';
+                tokenInfo.textContent = '';
+            }
+        }
+
+        // Make API request
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(authToken && { 'Authorization': `Bearer ${authToken}` }),
+                        ...options.headers
+                    },
+                    ...options
+                });
+
+                const data = await response.json();
+                return { success: response.ok, data, status: response.status };
+            } catch (error) {
+                return { success: false, data: { message: error.message }, status: 0 };
+            }
+        }
+
+        // Register user
+        async function registerUser() {
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            const responseDiv = document.getElementById('registerResponse');
+
+            if (!username || !password) {
+                responseDiv.textContent = 'Please enter both username and password';
+                responseDiv.className = 'response error';
+                return;
+            }
+
+            const result = await makeRequest('/api/auth/register', {
+                method: 'POST',
+                body: JSON.stringify({ username, password })
+            });
+
+            responseDiv.textContent = JSON.stringify(result.data, null, 2);
+            responseDiv.className = `response ${result.success ? 'success' : 'error'}`;
+
+            if (result.success) {
+                document.getElementById('regUsername').value = '';
+                document.getElementById('regPassword').value = '';
+            }
+        }
+
+        // Login user
+        async function loginUser() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const responseDiv = document.getElementById('loginResponse');
+
+            if (!username || !password) {
+                responseDiv.textContent = 'Please enter both username and password';
+                responseDiv.className = 'response error';
+                return;
+            }
+
+            const result = await makeRequest('/api/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ username, password })
+            });
+
+            responseDiv.textContent = JSON.stringify(result.data, null, 2);
+            responseDiv.className = `response ${result.success ? 'success' : 'error'}`;
+
+            if (result.success && result.data.data && result.data.data.token) {
+                authToken = result.data.data.token;
+                currentUser = username;
+                localStorage.setItem('authToken', authToken);
+                localStorage.setItem('currentUser', currentUser);
+                updateAuthStatus();
+                
+                document.getElementById('loginUsername').value = '';
+                document.getElementById('loginPassword').value = '';
+            }
+        }
+
+        // Create todo
+        async function createTodo() {
+            const title = document.getElementById('todoTitle').value;
+            const description = document.getElementById('todoDescription').value;
+            const responseDiv = document.getElementById('createResponse');
+
+            if (!title) {
+                responseDiv.textContent = 'Please enter a title for the todo';
+                responseDiv.className = 'response error';
+                return;
+            }
+
+            if (!authToken) {
+                responseDiv.textContent = 'Please login first';
+                responseDiv.className = 'response error';
+                return;
+            }
+
+            const result = await makeRequest('/api/todos', {
+                method: 'POST',
+                body: JSON.stringify({ title, description, completed: false })
+            });
+
+            responseDiv.textContent = JSON.stringify(result.data, null, 2);
+            responseDiv.className = `response ${result.success ? 'success' : 'error'}`;
+
+            if (result.success) {
+                document.getElementById('todoTitle').value = '';
+                document.getElementById('todoDescription').value = '';
+            }
+        }
+
+        // Get all todos
+        async function getAllTodos() {
+            const todosList = document.getElementById('todosList');
+
+            if (!authToken) {
+                todosList.innerHTML = '<div class="response error">Please login first</div>';
+                return;
+            }
+
+            const result = await makeRequest('/api/todos');
+
+            if (result.success) {
+                const todos = result.data.data || [];
+                if (todos.length === 0) {
+                    todosList.innerHTML = '<div class="response success">No todos found</div>';
+                } else {
+                    const todosHtml = todos.map(todo => `
+                        <div class="todo-item ${todo.completed ? 'completed' : ''}">
+                            <div>
+                                <strong>${todo.title}</strong>
+                                ${todo.description ? `<br><small>${todo.description}</small>` : ''}
+                            </div>
+                            <div class="todo-actions">
+                                <button class="btn-secondary" onclick="toggleTodo(${todo.id})">
+                                    ${todo.completed ? 'Undo' : 'Complete'}
+                                </button>
+                                <button class="btn-danger" onclick="deleteTodo(${todo.id})">Delete</button>
+                            </div>
+                        </div>
+                    `).join('');
+                    todosList.innerHTML = todosHtml;
+                }
+            } else {
+                todosList.innerHTML = `<div class="response error">${result.data.message}</div>`;
+            }
+        }
+
+        // Toggle todo completion
+        async function toggleTodo(id) {
+            if (!authToken) return;
+
+            const result = await makeRequest(`/api/todos/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify({ completed: true }) // Simplified for demo
+            });
+
+            if (result.success) {
+                getAllTodos();
+            }
+        }
+
+        // Delete todo
+        async function deleteTodo(id) {
+            if (!authToken) return;
+
+            const result = await makeRequest(`/api/todos/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (result.success) {
+                getAllTodos();
+            }
+        }
+
+        // Initialize
+        updateAuthStatus();
+    </script>
+</body>
+</html> 
